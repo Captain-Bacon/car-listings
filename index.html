@@ -156,14 +156,60 @@
             cursor: pointer;
         }
 
+        .search-control, .exclude-control {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input, .exclude-input {
+            padding: var(--space-2) var(--space-3);
+            padding-right: 28px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.8125rem;
+            width: 160px;
+        }
+
+        .search-input:focus, .exclude-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .search-input.has-search {
+            border-color: var(--accent-info);
+        }
+
+        .exclude-input.has-exclusions {
+            border-color: var(--accent-warning);
+        }
+
+        .btn-clear {
+            position: absolute;
+            right: 6px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 4px;
+        }
+
+        .btn-clear:hover {
+            color: var(--text-primary);
+        }
+
         .main-content {
             padding: var(--space-6);
         }
 
         .listings-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: var(--space-5);
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: var(--space-4);
         }
 
         .listing-card {
@@ -284,7 +330,7 @@
         }
 
         .listing-title {
-            font-size: 0.9375rem;
+            font-size: 0.8125rem;
             font-weight: 600;
             line-height: 1.3;
             display: -webkit-box;
@@ -294,7 +340,7 @@
         }
 
         .listing-price {
-            font-size: 1.125rem;
+            font-size: 1rem;
             font-weight: 700;
             font-family: 'JetBrains Mono', monospace;
             white-space: nowrap;
@@ -403,10 +449,20 @@
             Sold/Gone <span class="filter-count" id="countGone">0</span>
         </button>
         <div class="filter-spacer"></div>
+        <div class="search-control">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search..."
+                   onchange="updateSearch(this.value)" onkeyup="if(event.key==='Enter')updateSearch(this.value)">
+            <button class="btn-clear" onclick="clearSearch()" title="Clear">×</button>
+        </div>
+        <div class="exclude-control">
+            <input type="text" id="excludeInput" class="exclude-input" placeholder="Exclude..."
+                   onchange="updateExclusions(this.value)" onkeyup="if(event.key==='Enter')updateExclusions(this.value)">
+            <button class="btn-clear" onclick="clearExclusions()" title="Clear">×</button>
+        </div>
         <select class="sort-select" onchange="setSort(this.value)">
             <option value="newest">Newest First</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
+            <option value="price-asc">Price: Low→High</option>
+            <option value="price-desc">Price: High→Low</option>
             <option value="year-desc">Year: Newest</option>
             <option value="mileage-asc">Mileage: Lowest</option>
         </select>
@@ -418,7 +474,7 @@
     </main>
 
     <footer class="footer">
-        Last updated: 01 Feb 2026 at 17:02
+        Last updated: 01 Feb 2026 at 17:18
     </footer>
 
     <script>
@@ -427,8 +483,23 @@
         const maxBudget = 4000;
         let currentFilter = 'all';
         let currentSort = 'newest';
+        let searchTerms = [];
+        let exclusions = [];
 
         function init() {
+            // Load saved preferences from localStorage
+            const savedExclusions = localStorage.getItem('car_exclusions');
+            if (savedExclusions) {
+                exclusions = JSON.parse(savedExclusions);
+                document.getElementById('excludeInput').value = exclusions.join(', ');
+                if (exclusions.length > 0) document.getElementById('excludeInput').classList.add('has-exclusions');
+            }
+            const savedSearch = localStorage.getItem('car_search');
+            if (savedSearch) {
+                searchTerms = JSON.parse(savedSearch);
+                document.getElementById('searchInput').value = searchTerms.join(', ');
+                if (searchTerms.length > 0) document.getElementById('searchInput').classList.add('has-search');
+            }
             renderListings();
             updateStats();
         }
@@ -466,6 +537,22 @@
                     break;
                 default:
                     filtered = listings.filter(l => !l.is_gone);
+            }
+
+            // Apply exclusions
+            if (exclusions.length > 0) {
+                filtered = filtered.filter(l => {
+                    const title = l.title.toLowerCase();
+                    return !exclusions.some(term => title.includes(term.toLowerCase()));
+                });
+            }
+
+            // Apply search
+            if (searchTerms.length > 0) {
+                filtered = filtered.filter(l => {
+                    const title = l.title.toLowerCase();
+                    return searchTerms.some(term => title.includes(term.toLowerCase()));
+                });
             }
 
             // Apply sort
@@ -545,6 +632,44 @@
         function setSort(sortValue) {
             currentSort = sortValue;
             renderListings();
+        }
+
+        function updateSearch(value) {
+            searchTerms = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            localStorage.setItem('car_search', JSON.stringify(searchTerms));
+            const input = document.getElementById('searchInput');
+            input.classList.toggle('has-search', searchTerms.length > 0);
+            renderListings();
+            updateStats();
+        }
+
+        function clearSearch() {
+            searchTerms = [];
+            localStorage.removeItem('car_search');
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            input.classList.remove('has-search');
+            renderListings();
+            updateStats();
+        }
+
+        function updateExclusions(value) {
+            exclusions = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            localStorage.setItem('car_exclusions', JSON.stringify(exclusions));
+            const input = document.getElementById('excludeInput');
+            input.classList.toggle('has-exclusions', exclusions.length > 0);
+            renderListings();
+            updateStats();
+        }
+
+        function clearExclusions() {
+            exclusions = [];
+            localStorage.removeItem('car_exclusions');
+            const input = document.getElementById('excludeInput');
+            input.value = '';
+            input.classList.remove('has-exclusions');
+            renderListings();
+            updateStats();
         }
 
         function updateStats() {
