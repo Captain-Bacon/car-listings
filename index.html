@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Listings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-void: #000000;
+            --bg-elevated: #0a0a0a;
+            --bg-card: #111111;
+            --bg-input: #0d0d0d;
+            --bg-hover: #1a1a1a;
+            --accent-primary: #10b981;
+            --accent-primary-glow: rgba(16, 185, 129, 0.15);
+            --accent-info: #38bdf8;
+            --accent-info-glow: rgba(56, 189, 248, 0.15);
+            --accent-warning: #f59e0b;
+            --accent-warning-glow: rgba(245, 158, 11, 0.15);
+            --accent-danger: #f43f5e;
+            --accent-danger-glow: rgba(244, 63, 94, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #52525b;
+            --border-subtle: #1f1f1f;
+            --border-visible: #2a2a2a;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.5);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+            --shadow-glow-green: 0 0 20px rgba(16, 185, 129, 0.2);
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-8: 32px;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --duration-fast: 150ms;
+            --duration-normal: 250ms;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: 'Space Grotesk', -apple-system, sans-serif;
+            background: var(--bg-void);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-4) var(--space-6);
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .header-status {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-4) var(--space-6);
+            background: var(--bg-void);
+            border-bottom: 1px solid var(--border-subtle);
+            overflow-x: auto;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            background: transparent;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.875rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all var(--duration-fast) var(--ease-out);
+        }
+
+        .filter-tab:hover {
+            color: var(--text-primary);
+            background: var(--bg-hover);
+        }
+
+        .filter-tab.active {
+            background: var(--bg-card);
+            border-color: var(--border-visible);
+            color: var(--text-primary);
+        }
+
+        .filter-count {
+            background: var(--bg-input);
+            padding: 2px 8px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .filter-tab.active .filter-count {
+            background: var(--accent-primary);
+            color: #000;
+        }
+
+        .filter-spacer {
+            flex: 1;
+        }
+
+        .sort-select {
+            padding: var(--space-2) var(--space-3);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .main-content {
+            padding: var(--space-6);
+        }
+
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: var(--space-5);
+        }
+
+        .listing-card {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            transition: all var(--duration-normal) var(--ease-out);
+        }
+
+        .listing-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-visible);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .listing-card.new {
+            border-color: var(--accent-info);
+            box-shadow: 0 0 0 1px var(--accent-info);
+        }
+
+        .listing-card.gone {
+            opacity: 0.5;
+        }
+
+        .listings-grid[data-filter="gone"] .listing-card.gone {
+            opacity: 1;
+        }
+
+        .listing-card.hidden {
+            display: none;
+        }
+
+        .listing-image-container {
+            position: relative;
+            aspect-ratio: 16 / 10;
+            background: var(--bg-input);
+            overflow: hidden;
+        }
+
+        .listing-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform var(--duration-normal) var(--ease-out);
+        }
+
+        .listing-card:hover .listing-image {
+            transform: scale(1.05);
+        }
+
+        .listing-image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--text-muted);
+        }
+
+        .listing-badges {
+            position: absolute;
+            top: var(--space-3);
+            left: var(--space-3);
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .listing-badge {
+            padding: var(--space-1) var(--space-3);
+            border-radius: 100px;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .listing-badge.new {
+            background: var(--accent-info);
+            color: #000;
+        }
+
+        .listing-badge.gone {
+            background: var(--accent-danger);
+            color: white;
+        }
+
+        .listing-source-badge {
+            position: absolute;
+            top: var(--space-3);
+            right: var(--space-3);
+            padding: var(--space-1) var(--space-3);
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 100px;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .listing-body {
+            padding: var(--space-4);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+
+        .listing-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: var(--space-3);
+        }
+
+        .listing-title {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .listing-price {
+            font-size: 1.125rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+        }
+
+        .listing-price.preferred {
+            color: var(--accent-primary);
+        }
+
+        .listing-price.stretch {
+            color: var(--accent-warning);
+        }
+
+        .listing-price.over {
+            color: var(--accent-danger);
+        }
+
+        .listing-specs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+        }
+
+        .listing-spec {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-2);
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+
+        .listing-spec-icon {
+            font-size: 0.875rem;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-8);
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: var(--space-4);
+            opacity: 0.3;
+        }
+
+        .empty-state-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+        }
+
+        .footer {
+            padding: var(--space-4) var(--space-6);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        @media (max-width: 600px) {
+            .filter-bar {
+                padding: var(--space-3);
+            }
+            .main-content {
+                padding: var(--space-3);
+            }
+            .listings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-title">
+            <span>🚗</span>
+            <span>Car Listings</span>
+        </div>
+        <div class="header-status" id="headerStatus">Loading...</div>
+    </header>
+
+    <div class="filter-bar">
+        <button class="filter-tab active" data-filter="all" onclick="setFilter('all')">
+            All <span class="filter-count" id="countAll">0</span>
+        </button>
+        <button class="filter-tab" data-filter="preferred" onclick="setFilter('preferred')">
+            Under £1,500 <span class="filter-count" id="countPreferred">0</span>
+        </button>
+        <button class="filter-tab" data-filter="stretch" onclick="setFilter('stretch')">
+            £1,500–£4,000 <span class="filter-count" id="countStretch">0</span>
+        </button>
+        <button class="filter-tab" data-filter="new" onclick="setFilter('new')">
+            New (24h) <span class="filter-count" id="countNew">0</span>
+        </button>
+        <button class="filter-tab" data-filter="gone" onclick="setFilter('gone')">
+            Sold/Gone <span class="filter-count" id="countGone">0</span>
+        </button>
+        <div class="filter-spacer"></div>
+        <select class="sort-select" onchange="setSort(this.value)">
+            <option value="newest">Newest First</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="year-desc">Year: Newest</option>
+            <option value="mileage-asc">Mileage: Lowest</option>
+        </select>
+    </div>
+
+    <main class="main-content">
+        <div class="listings-grid" id="listingsGrid" data-filter="all">
+        </div>
+    </main>
+
+    <footer class="footer">
+        Last updated: 01 Feb 2026 at 17:02
+    </footer>
+
+    <script>
+        const listings = [{"id": "autotrader_202507274867273", "source": "autotrader", "source_id": "202507274867273", "source_url": "https://www.autotrader.co.uk/car-details/202507274867273?sort=relevance&searchId=8f1e9576-2cf2-4292-ad0e-2ee79e4dffc7&page=1&postcode=OX290AR&price-to=4000&radius=30&seats_values=6&seats_values=7&seats_values=8&seats_values=9&advertising-location=at_cars&fromsra&backLinkQueryParams=postcode%3DOX290AR%26radius%3D30%26price-to%3D4000%26seats_values%3D6%26seats_values%3D7%26seats_values%3D8%26seats_values%3D9%26flrfc%3D1", "title": "Ford S-Max 1.6 TDCi Zetec Euro 5 (s/s) 5dr", "price": 3794, "year": 2013, "mileage": 103950, "fuel_type": "diesel", "transmission": null, "seats": null, "location": "Thatcham (30 miles)", "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/e9c9cfcd16c14dd7954db2e13ec44546.jpg"], "first_seen_at": "2026-02-01T15:59:32.374754", "last_seen_at": "2026-02-01T15:59:32.374754", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": "2026-02-01T15:59:40.452385", "local_image": "images/autotrader_202507274867273_0.jpg"}, {"id": "gumtree_1509369265", "source": "gumtree", "source_id": "1509369265", "source_url": "https://www.gumtree.com/p/vauxhall/vauxhall-zafira-mpv-2006-manual-1598-cc-5-doors/1509369265", "title": "Vauxhall ZAFIRA MPV 2006 Manual 1598 cc 5 doors", "price": 750, "year": 2006, "mileage": 121000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Swindon, Wiltshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/cd0e6e71b2d348aab3_506230c4c2f2/86"], "first_seen_at": "2026-02-01T15:58:09.036937", "last_seen_at": "2026-02-01T15:58:09.036937", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": "2026-02-01T15:58:47.881181", "local_image": "images/gumtree_1509369265_0.jpg"}, {"id": "gumtree_1509370514", "source": "gumtree", "source_id": "1509370514", "source_url": "https://www.gumtree.com/p/ford/ford-grand-c-max-mpv-2018-manual-1499-cc-5-doors/1509370514", "title": "Ford GRAND C-MAX MPV 2018 Manual 1499 cc 5 doors", "price": 1800, "year": 2018, "mileage": 100551, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Haddenham, Buckinghamshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/63668de0a66744728c_3f5225935c6c/86"], "first_seen_at": "2026-02-01T15:58:09.036927", "last_seen_at": "2026-02-01T15:58:09.036927", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": "2026-02-01T15:58:37.278752", "local_image": "images/gumtree_1509370514_0.jpg"}, {"id": "autotrader_202601289488143", "source": "autotrader", "source_id": "202601289488143", "source_url": "https://www.autotrader.co.uk/car-details/202601289488143?dueToME&sort=relevance&searchId=8f1e9576-2cf2-4292-ad0e-2ee79e4dffc7&page=1&postcode=OX290AR&price-to=4000&radius=30&seats_values=6&seats_values=7&seats_values=8&seats_values=9&advertising-location=at_cars&fromsra&backLinkQueryParams=postcode%3DOX290AR%26radius%3D30%26price-to%3D4000%26seats_values%3D6%26seats_values%3D7%26seats_values%3D8%26seats_values%3D9%26flrfc%3D1", "title": "Citroen Grand C4 Picasso 1.6 BlueHDi Selection Euro 6 (s/s) 5dr", "price": 3500, "year": 2015, "mileage": 106990, "fuel_type": "diesel", "transmission": null, "seats": null, "location": null, "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/9c79e996644945409bbbd30b84b1cd36.jpg"], "first_seen_at": "2026-01-31T11:09:04.708880", "last_seen_at": "2026-02-01T15:59:32.387599", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": "2026-01-31T11:09:06.497045", "local_image": "images/autotrader_202601289488143_0.jpg"}, {"id": "autotrader_202601229353678", "source": "autotrader", "source_id": "202601229353678", "source_url": "https://www.autotrader.co.uk/car-details/202601229353678?dueToME&sort=relevance&searchId=8f1e9576-2cf2-4292-ad0e-2ee79e4dffc7&page=1&postcode=OX290AR&price-to=4000&radius=30&seats_values=6&seats_values=7&seats_values=8&seats_values=9&advertising-location=at_cars&fromsra&backLinkQueryParams=postcode%3DOX290AR%26radius%3D30%26price-to%3D4000%26seats_values%3D6%26seats_values%3D7%26seats_values%3D8%26seats_values%3D9%26flrfc%3D1", "title": "Citroen Grand C4 Picasso 1.6 BlueHDi Exclusive+ Euro 6 (s/s) 5dr", "price": 4000, "year": 2015, "mileage": 100800, "fuel_type": "diesel", "transmission": null, "seats": null, "location": null, "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/ced541c90fd54063b93c3541e3496744.jpg"], "first_seen_at": "2026-01-30T14:32:16.414521", "last_seen_at": "2026-02-01T15:59:32.385268", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/autotrader_202601229353678_0.jpg"}, {"id": "gumtree_1509069406", "source": "gumtree", "source_id": "1509069406", "source_url": "https://www.gumtree.com/p/mercedes-benz/mercedes-benz-vito-minibus-2006-manual-2148-cc-/1509069406", "title": "Mercedes-Benz VITO Minibus", "price": 1500, "year": 2006, "mileage": 1, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/55607b67866a4fd5b8_374a7cd7eb53/86"], "first_seen_at": "2026-01-30T14:31:43.235981", "last_seen_at": "2026-02-01T15:58:47.943472", "is_gone": false, "gone_at": null, "search_ids": ["22859adb", "default-7-seater"], "notified_at": null, "local_image": "images/gumtree_1509069406_0.jpg"}, {"id": "gumtree_1508469800", "source": "gumtree", "source_id": "1508469800", "source_url": "https://www.gumtree.com/p/citroen/citroen-grand-c4-picasso-mpv-2014-manual-1560-cc-5-doors/1508469800", "title": "Citroen GRAND C4 PICASSO MPV 2014 Manual 1560 cc 5 doors", "price": 2500, "year": 2014, "mileage": 138900, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Cheltenham, Gloucestershire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/5412d690b28449c1a3_a6968211ffa9/86"], "first_seen_at": "2026-01-30T14:31:33.307323", "last_seen_at": "2026-02-01T15:58:47.941155", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1508469800_0.jpg"}, {"id": "gumtree_1508523242", "source": "gumtree", "source_id": "1508523242", "source_url": "https://www.gumtree.com/p/volkswagen/volkswagen-touran-mpv-2010-manual-1598-cc-5-doors/1508523242", "title": "Volkswagen TOURAN MPV 2010 Manual 1598 cc 5 doors", "price": 2100, "year": 2010, "mileage": 153684, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Abbeymead, Gloucestershire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/c144fd52ac1a477281_94fc10813760/86"], "first_seen_at": "2026-01-30T14:31:33.307317", "last_seen_at": "2026-02-01T15:58:47.935943", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1508523242_0.jpg"}, {"id": "gumtree_1508742083", "source": "gumtree", "source_id": "1508742083", "source_url": "https://www.gumtree.com/p/ford/ford-grand-c-max-mpv-2012-semi-auto-1997-cc-5-doors/1508742083", "title": "Ford GRAND C-MAX MPV 2012 Semi-Auto 1997 cc 5 doors", "price": 3800, "year": 2012, "mileage": 90000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "Buckingham, Buckinghamshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/cc79cfe3b01545968b_184cd141cd6b/86"], "first_seen_at": "2026-01-30T14:31:33.307307", "last_seen_at": "2026-02-01T15:58:47.930930", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1508742083_0.jpg"}, {"id": "gumtree_1508973836", "source": "gumtree", "source_id": "1508973836", "source_url": "https://www.gumtree.com/p/vauxhall/vauxhall-zafira-mpv-2010-manual-1910-cc-5-doors/1508973836", "title": "Vauxhall ZAFIRA MPV 2010 Manual 1910 cc 5 doors", "price": 2350, "year": 2010, "mileage": 119146, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Wroughton, Wiltshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/6daf347f7d074f76a7_f598596b0e69/86"], "first_seen_at": "2026-01-30T14:31:33.307301", "last_seen_at": "2026-02-01T15:58:47.928662", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1508973836_0.jpg"}, {"id": "gumtree_1504344525", "source": "gumtree", "source_id": "1504344525", "source_url": "https://www.gumtree.com/p/vauxhall/vauxhall-zafira-mpv-2012-manual-1956-cc-5-doors/1504344525", "title": "Vauxhall ZAFIRA MPV 2012 Manual 1956 cc 5 doors", "price": 2700, "year": 2012, "mileage": 93000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Cheltenham, Gloucestershire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/b5e3d534-ad26-44e5-b777-50d160548700/86"], "first_seen_at": "2026-01-30T14:31:33.307295", "last_seen_at": "2026-02-01T15:58:47.926418", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1504344525_0.jpg"}, {"id": "gumtree_1509023315", "source": "gumtree", "source_id": "1509023315", "source_url": "https://www.gumtree.com/p/ford/ford-s-max-2011/1509023315", "title": "Ford S Max 2011", "price": 2850, "year": 2011, "mileage": 140648, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Chinnor, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/d9936e8510884fb4b3_bbe8cc9cba77/86"], "first_seen_at": "2026-01-30T14:31:33.307289", "last_seen_at": "2026-02-01T15:58:47.924171", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1509023315_0.jpg"}, {"id": "gumtree_1509059350", "source": "gumtree", "source_id": "1509059350", "source_url": "https://www.gumtree.com/p/citroen/2012-citroen-c4-grande-picasso-2.0-hdi-automat-/1509059350", "title": "2012 CITROEN C4 GRANDE PICASSO 2.0 HDI automat", "price": 600, "year": 2012, "mileage": 111000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "Wantage, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/b8e1922ad9644418a5_d964ef44d2b2/86"], "first_seen_at": "2026-01-30T14:31:33.307284", "last_seen_at": "2026-02-01T15:58:47.921933", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1509059350_0.jpg"}, {"id": "gumtree_1509065450", "source": "gumtree", "source_id": "1509065450", "source_url": "https://www.gumtree.com/p/ford/ford-s-max-mpv-2008-manual-1753-cc-5-doors/1509065450", "title": "Ford S-MAX MPV 2008 Manual 1753 cc 5 doors", "price": 2500, "year": 2008, "mileage": 137007, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Watlington, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/54b709b3bc344152a5_56e41d933607/86"], "first_seen_at": "2026-01-30T14:31:33.307276", "last_seen_at": "2026-02-01T15:58:47.919658", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1509065450_0.jpg"}, {"id": "gumtree_1509116709", "source": "gumtree", "source_id": "1509116709", "source_url": "https://www.gumtree.com/p/volkswagen/2012-volkswagen-touran-1.6-tdi-105-s-5dr-mpv-diesel-manual/1509116709", "title": "2012 Volkswagen Touran 1.6 TDI 105 S 5dr MPV Diesel Manual", "price": 1950, "year": 2012, "mileage": 120566, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Abbeymead, Gloucestershire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/f07b248f482c4c0b91_dd4f76a70790/86"], "first_seen_at": "2026-01-30T14:31:33.307271", "last_seen_at": "2026-02-01T15:58:47.884443", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1509116709_0.jpg"}, {"id": "gumtree_1508286648", "source": "gumtree", "source_id": "1508286648", "source_url": "https://www.gumtree.com/p/vauxhall/2016-vauxhall-zafira-2.0-cdti-170-sri-5dr-mpv-diesel-manual/1508286648", "title": "2016 Vauxhall Zafira 2.0 CDTi [170] SRi 5dr MPV Diesel Manual", "price": 3495, "year": 2016, "mileage": 101500, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Swindon, Wiltshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/7c3da47525e244559f_1dcac6dd4388/86"], "first_seen_at": "2026-01-30T14:31:33.307266", "last_seen_at": "2026-02-01T15:58:47.891369", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1508286648_0.jpg"}, {"id": "gumtree_1507063119", "source": "gumtree", "source_id": "1507063119", "source_url": "https://www.gumtree.com/p/nissan/nissan-qashqai-2-2.0-dci-n-tec-2011/1507063119", "title": "NISSAN QASHQAI+2 2.0 dCi n-tec 2011", "price": 2495, "year": 2011, "mileage": 94000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Hungerford, Berkshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/8ebad4cac3964d33b2_6dfd2cb710de/86"], "first_seen_at": "2026-01-30T14:31:33.307260", "last_seen_at": "2026-02-01T15:58:47.917460", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1507063119_0.jpg"}, {"id": "gumtree_1508920064", "source": "gumtree", "source_id": "1508920064", "source_url": "https://www.gumtree.com/p/vauxhall/2014-vauxhall-zafira-1.7-cdti-ecoflex-design-euro-5-5dr-snav-mpv-diesel-manual/1508920064", "title": "2014 Vauxhall Zafira 1.7 CDTi ecoFLEX Design Euro 5 5dr MPV Diesel Manual", "price": 3990, "year": 2014, "mileage": 75000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Swindon, Wiltshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/685f18c984224d54a3_711c35a39178/86"], "first_seen_at": "2026-01-30T14:31:33.307254", "last_seen_at": "2026-02-01T15:58:47.889131", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1508920064_0.jpg"}, {"id": "gumtree_1502193122", "source": "gumtree", "source_id": "1502193122", "source_url": "https://www.gumtree.com/p/vauxhall/vauxhall-zafira-exclusiv-ulez-complaint-full-histroy-3m-warranty/1502193122", "title": "Vauxhall Zafira EXCLUSIV ULEZ COMPLAINT FULL HISTORY 3M WARRANTY", "price": 3999, "year": 2013, "mileage": 87884, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Gloucester, Gloucestershire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/9dd5def1-7016-451c-f126-d99c78090b00/86"], "first_seen_at": "2026-01-30T14:31:33.307248", "last_seen_at": "2026-02-01T15:58:47.915227", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1502193122_0.jpg"}, {"id": "gumtree_1507729343", "source": "gumtree", "source_id": "1507729343", "source_url": "https://www.gumtree.com/p/nissan/2010-nissan-qashqai-2-1.6-n-tec-2wd-euro-4-5dr-hatchback-petrol-manual/1507729343", "title": "2010 Nissan Qashqai+2 1.6 n-tec 2WD Euro 4 5dr HATCHBACK Petrol Manual", "price": 3295, "year": 2010, "mileage": 116000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Swindon, Wiltshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/12c3229715d04a6c83_0ff1d5d5612b/86"], "first_seen_at": "2026-01-30T14:31:33.307242", "last_seen_at": "2026-02-01T15:58:47.912938", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1507729343_0.jpg"}, {"id": "gumtree_1508987379", "source": "gumtree", "source_id": "1508987379", "source_url": "https://www.gumtree.com/p/seat/2011-seat-alhambra-2.0-tdi-cr-ecomotive-s-5dr-mpv-diesel-manual/1508987379", "title": "2011 SEAT Alhambra 2.0 TDI CR Ecomotive S 5dr MPV Diesel Manual", "price": 2250, "year": 2011, "mileage": 196298, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Abbeymead, Gloucestershire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/9c384d043eb448dc94_224f081254c9/86"], "first_seen_at": "2026-01-30T14:31:33.307226", "last_seen_at": "2026-02-01T15:58:47.910460", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1508987379_0.jpg"}, {"id": "gumtree_1509210356", "source": "gumtree", "source_id": "1509210356", "source_url": "https://www.gumtree.com/p/volkswagen/volkswagen-touran-mpv-2013-manual-1598-cc-5-doors/1509210356", "title": "Volkswagen TOURAN MPV 2013 Manual 1598 cc 5 doors", "price": 4000, "year": 2013, "mileage": 87500, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Swindon, Wiltshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/6c4da48c18b44b41a2_30b24e640240/86"], "first_seen_at": "2026-01-30T14:31:33.307219", "last_seen_at": "2026-02-01T15:58:47.907944", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1509210356_0.jpg"}, {"id": "gumtree_1507891737", "source": "gumtree", "source_id": "1507891737", "source_url": "https://www.gumtree.com/p/volkswagen/2007-volkswagen-touran-1.6-s-5dr-mpv-petrol-manual/1507891737", "title": "2007 Volkswagen Touran 1.6 S 5dr MPV Petrol Manual", "price": 1795, "year": 2007, "mileage": 121000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Cheltenham, Gloucestershire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/8a950ea3a5104d75a9_43251a7bc8e0/86"], "first_seen_at": "2026-01-30T14:31:33.307212", "last_seen_at": "2026-01-31T11:08:00.566245", "is_gone": true, "gone_at": "2026-01-31T18:22:17.232976", "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1507891737_0.jpg"}, {"id": "gumtree_1505296386", "source": "gumtree", "source_id": "1505296386", "source_url": "https://www.gumtree.com/p/chrysler/chrysler-grand-voyager-mpv-2006-other-2776-cc-5-doors/1505296386", "title": "Chrysler GRAND VOYAGER MPV 2006 Other 2776 cc 5 doors", "price": 1850, "year": 2006, "mileage": 202000, "fuel_type": "diesel", "transmission": null, "seats": null, "location": "Royal Wootton Bassett, Wiltshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/03cac8d3-4503-4c66-054a-d2feccbed500/86"], "first_seen_at": "2026-01-30T14:31:33.307206", "last_seen_at": "2026-02-01T15:58:47.905437", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1505296386_0.jpg"}, {"id": "gumtree_1509046496", "source": "gumtree", "source_id": "1509046496", "source_url": "https://www.gumtree.com/p/renault/2007-renault-grand-espace-2.0-dci-150-dynamique-5dr-mpv-diesel-manual/1509046496", "title": "2007 Renault Grand Espace 2.0 dCi 150 Dynamique 5dr MPV Diesel Manual", "price": 3250, "year": 2007, "mileage": 153179, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Abbeymead, Gloucestershire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/cf9d02fde912476bb9_712869071546/86"], "first_seen_at": "2026-01-30T14:31:33.307191", "last_seen_at": "2026-02-01T15:58:47.900341", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1509046496_0.jpg"}, {"id": "gumtree_1509258846", "source": "gumtree", "source_id": "1509258846", "source_url": "https://www.gumtree.com/p/vauxhall/vauxhall-zafira-gsi-2.0-16v-turbo-/1509258846", "title": "Vauxhall zafira gsi 2.0 16v turbo", "price": 1500, "year": 2005, "mileage": 142554, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Swindon, Wiltshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/d9c093af821e46a099_5bc544196e06/86"], "first_seen_at": "2026-01-30T14:31:33.307178", "last_seen_at": "2026-02-01T15:58:47.893726", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1509258846_0.jpg"}, {"id": "gumtree_1506924112", "source": "gumtree", "source_id": "1506924112", "source_url": "https://www.gumtree.com/p/mitsubishi/2010-mitsubishi-shogun-3.2-di-dc-elegance-suv-5dr-diesel-auto-4wd-euro-5-lwb-19/1506924112", "title": "2010 Mitsubishi Shogun 3.2 DI-DC Elegance SUV 5dr Diesel Auto 4WD Euro 5 LWB", "price": 3795, "year": 2010, "mileage": 205600, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "Evesham, Worcestershire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/7ab4ba81fc004940b8_0e98de85df52/86"], "first_seen_at": "2026-01-30T14:31:33.307117", "last_seen_at": "2026-02-01T15:58:33.501124", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/gumtree_1506924112_0.jpg"}, {"id": "pistonheads_19801581", "source": "pistonheads", "source_id": "19801581", "source_url": "https://www.pistonheads.com/buy/listing/19801581", "title": "Nissan Qashqai+2 1.5 dCi 360 2WD Euro 5 5dr", "price": 3780, "year": 2013, "mileage": 93000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "30 miles away", "distance_miles": null, "description": "", "images": ["https://img.pistonheads.com/Fullsize/nissan/qashqai-2/1-5-dci-360-2wd-euro-5-5dr/nissan-qashqai-2-1-5-dci-360-2wd-euro-5-5dr-1395875500-1.jpg?resize=600"], "first_seen_at": "2026-01-30T07:32:57.999787", "last_seen_at": "2026-02-01T16:00:05.352631", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/pistonheads_19801581_0.jpg"}, {"id": "autotrader_202511137862552", "source": "autotrader", "source_id": "202511137862552", "source_url": "https://www.autotrader.co.uk/car-details/202511137862552", "title": "Nissan Qashqai+2 1.6 n-tec 2WD Euro 4 5dr", "price": 3295, "year": 2010, "mileage": 116000, "fuel_type": null, "transmission": null, "seats": null, "location": "Swindon (20 miles)", "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/7d2f4f7e57a643ccb85abac206ad9ee8.jpg"], "first_seen_at": "2026-01-30T07:32:30.656372", "last_seen_at": "2026-01-30T18:21:25.558381", "is_gone": true, "gone_at": "2026-01-31T11:09:48.377391", "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/autotrader_202511137862552_0.jpg"}, {"id": "autotrader_202601078983308", "source": "autotrader", "source_id": "202601078983308", "source_url": "https://www.autotrader.co.uk/car-details/202601078983308", "title": "Vauxhall Zafira Tourer 1.6 CDTi ecoFLEX SRi Euro 6 (s/s) 5dr", "price": 3990, "year": 2016, "mileage": 98989, "fuel_type": "diesel", "transmission": null, "seats": null, "location": null, "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/d8f1f94683914dd1951152047603c892.jpg"], "first_seen_at": "2026-01-30T07:32:30.656208", "last_seen_at": "2026-01-30T18:21:25.415676", "is_gone": true, "gone_at": "2026-01-31T11:09:48.377387", "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/autotrader_202601078983308_0.jpg"}, {"id": "pistonheads_19736120", "source": "pistonheads", "source_id": "19736120", "source_url": "https://www.pistonheads.com/buy/listing/19736120", "title": "Land Rover Discovery 3 2.7 TD V6 HSE Station Wagon 5dr Diesel Automatic (270 g/km, 190 bhp)", "price": 2995, "year": 2009, "mileage": 207961, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "30 miles away", "distance_miles": null, "description": "", "images": ["https://img.pistonheads.com/Fullsize/land-rover/discovery-3/2-7-td-v6-hse-station-wagon-5dr-diesel-automatic-270-g-km-190-bhp/land-rover-discovery-3-2-7-td-v6-hse-station-wagon-5dr-diesel-automatic-270-g-km-190-bhp-1390894663-1.jpg?resize=600"], "first_seen_at": "2026-01-29T18:04:42.092198", "last_seen_at": "2026-02-01T16:00:05.363953", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/pistonheads_19736120_0.jpg"}, {"id": "pistonheads_19435175", "source": "pistonheads", "source_id": "19435175", "source_url": "https://www.pistonheads.com/buy/listing/19435175", "title": "Citroen Grand C4 Picasso 2.0 BlueHDi Exclusive MPV 5dr Diesel EAT6 Euro 6 (s/s) (150 ps)", "price": 3695, "year": 2015, "mileage": 126000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "30 miles away", "distance_miles": null, "description": "", "images": ["https://img.pistonheads.com/Fullsize/citroen/grand-c4-picasso/2-0-bluehdi-exclusive-mpv-5dr-diesel-eat6-euro-6-s-s--150-ps/citroen-grand-c4-picasso-2-0-bluehdi-exclusive-mpv-5dr-diesel-eat6-euro-6-s-s--150-ps-1361491339-1.jpg?resize=600"], "first_seen_at": "2026-01-29T18:04:42.092190", "last_seen_at": "2026-02-01T16:00:05.361558", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/pistonheads_19435175_0.jpg"}, {"id": "pistonheads_19753947", "source": "pistonheads", "source_id": "19753947", "source_url": "https://www.pistonheads.com/buy/listing/19753947", "title": "Land Rover Discovery 3 2.7 TD V6 HSE Station Wagon 5dr Diesel Automatic (270 g/km, 190 bhp)", "price": 3995, "year": 2009, "mileage": 144845, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "30 miles away", "distance_miles": null, "description": "", "images": ["https://img.pistonheads.com/Fullsize/land-rover/discovery-3/2-7-td-v6-hse-station-wagon-5dr-diesel-automatic-270-g-km-190-bhp/land-rover-discovery-3-2-7-td-v6-hse-station-wagon-5dr-diesel-automatic-270-g-km-190-bhp-1392559832-1.jpg?resize=600"], "first_seen_at": "2026-01-29T18:04:42.092180", "last_seen_at": "2026-02-01T16:00:05.359233", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/pistonheads_19753947_0.jpg"}, {"id": "pistonheads_19789150", "source": "pistonheads", "source_id": "19789150", "source_url": "https://www.pistonheads.com/buy/listing/19789150", "title": "Land Rover Discovery 3 2.7 TD V6 SE Station Wagon 5dr Diesel Automatic (270 g/km, 190 bhp)", "price": 3495, "year": 2009, "mileage": 160979, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "30 miles away", "distance_miles": null, "description": "", "images": ["https://img.pistonheads.com/Fullsize/land-rover/discovery-3/2-7-td-v6-se-station-wagon-5dr-diesel-automatic-270-g-km-190-bhp/land-rover-discovery-3-2-7-td-v6-se-station-wagon-5dr-diesel-automatic-270-g-km-190-bhp-1395261968-1.jpg?resize=600"], "first_seen_at": "2026-01-29T18:04:42.092168", "last_seen_at": "2026-02-01T16:00:05.357088", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/pistonheads_19789150_0.jpg"}, {"id": "pistonheads_19797171", "source": "pistonheads", "source_id": "19797171", "source_url": "https://www.pistonheads.com/buy/listing/19797171", "title": "Land Rover Discovery 4 3.0 TD V6 HSE SUV 5dr Diesel Auto 4WD Euro 4 (245 ps)", "price": 3695, "year": 2010, "mileage": 204897, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "30 miles away", "distance_miles": null, "description": "", "images": ["https://img.pistonheads.com/Fullsize/land-rover/discovery-4/3-0-td-v6-hse-suv-5dr-diesel-auto-4wd-euro-4-245-ps/land-rover-discovery-4-3-0-td-v6-hse-suv-5dr-diesel-auto-4wd-euro-4-245-ps-1395677805-1.jpg?resize=600"], "first_seen_at": "2026-01-29T18:04:42.092160", "last_seen_at": "2026-02-01T16:00:05.354865", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/pistonheads_19797171_0.jpg"}, {"id": "pistonheads_19607187", "source": "pistonheads", "source_id": "19607187", "source_url": "https://www.pistonheads.com/buy/listing/19607187", "title": "Peugeot 5008 1.6 HDi Sport MPV 5dr Diesel Manual Euro 5 (112 ps)", "price": 1995, "year": 2011, "mileage": 111574, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "28 miles away", "distance_miles": null, "description": "", "images": ["https://img.pistonheads.com/Fullsize/peugeot/5008/1-6-hdi-sport-mpv-5dr-diesel-manual-euro-5-112-ps/peugeot-5008-1-6-hdi-sport-mpv-5dr-diesel-manual-euro-5-112-ps-1376613309-1.jpg?resize=600"], "first_seen_at": "2026-01-29T18:04:42.092151", "last_seen_at": "2026-02-01T16:00:05.350455", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/pistonheads_19607187_0.jpg"}, {"id": "pistonheads_19498598", "source": "pistonheads", "source_id": "19498598", "source_url": "https://www.pistonheads.com/buy/listing/19498598", "title": "Vauxhall Zafira Tourer 1.8 16V Tech Line Euro 5 5dr", "price": 3990, "year": 2014, "mileage": 82000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "22 miles away", "distance_miles": null, "description": "", "images": ["https://img.pistonheads.com/Fullsize/vauxhall/zafira-tourer/1-8-16v-tech-line-euro-5-5dr/vauxhall-zafira-tourer-1-8-16v-tech-line-euro-5-5dr-1372067269-1.jpg?resize=600"], "first_seen_at": "2026-01-29T18:04:42.092142", "last_seen_at": "2026-02-01T16:00:05.348082", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/pistonheads_19498598_0.jpg"}, {"id": "pistonheads_19740580", "source": "pistonheads", "source_id": "19740580", "source_url": "https://www.pistonheads.com/buy/listing/19740580", "title": "KGM / Ssangyong Rodius 2.0 e-XDi ES Euro 5 5dr", "price": 3495, "year": 2013, "mileage": 66000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "21 miles away", "distance_miles": null, "description": "", "images": ["https://img.pistonheads.com/Fullsize/kgm--ssangyong/rodius/2-0-e-xdi-es-euro-5-5dr/kgm--ssangyong-rodius-2-0-e-xdi-es-euro-5-5dr-1391613445-1.jpg?resize=600"], "first_seen_at": "2026-01-29T18:04:42.091991", "last_seen_at": "2026-02-01T16:00:05.343103", "is_gone": false, "gone_at": null, "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/pistonheads_19740580_0.jpg"}, {"id": "autotrader_202512218739573", "source": "autotrader", "source_id": "202512218739573", "source_url": "https://www.autotrader.co.uk/car-details/202512218739573", "title": "Vauxhall Zafira Tourer 1.6 CDTi ecoFLEX SRi Nav Euro 6 (s/s) 5dr", "price": 3695, "year": 2017, "mileage": 118970, "fuel_type": "diesel", "transmission": null, "seats": null, "location": null, "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/cf65b5579d9e42b780ceafc13ca18b85.jpg"], "first_seen_at": "2026-01-29T18:04:15.290142", "last_seen_at": "2026-02-01T13:53:50.622725", "is_gone": true, "gone_at": "2026-02-01T15:59:40.455673", "search_ids": ["22859adb"], "notified_at": null, "local_image": "images/autotrader_202512218739573_0.jpg"}, {"id": "gumtree_1509202554", "source": "gumtree", "source_id": "1509202554", "source_url": "https://www.gumtree.com/p/ford/ford-galaxy-mpv-2010-manual-1997-cc-5-doors/1509202554", "title": "Ford Galaxy MPV 2010 Manual 1997cc 5 doors", "price": 850, "year": 2010, "mileage": 208000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Kidlington, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/51ff966aea1a4fe4bc_c64fc706c344/86"], "first_seen_at": "2026-01-29T13:03:57.130930", "last_seen_at": "2026-01-30T07:30:21.046799", "is_gone": true, "gone_at": "2026-01-30T15:00:29.067608", "search_ids": ["default-7-seater"], "notified_at": null, "local_image": "images/gumtree_1509202554_0.jpg"}, {"id": "gumtree_1508834630", "source": "gumtree", "source_id": "1508834630", "source_url": "https://www.gumtree.com/p/honda/honda-frv-ex-i-cdti-2.2-diesel-6-seater-alloys-leather-seats-mot-fr-v/1508834630", "title": "HONDA FRV EX I-CDTI 2.2 DIESEL 6 SEATER", "price": 1895, "year": 2007, "mileage": 134800, "fuel_type": "diesel", "transmission": null, "seats": null, "location": "Halifax, West Yorkshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978352", "last_seen_at": "2026-01-28T16:08:52.910139", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1508869404", "source": "gumtree", "source_id": "1508869404", "source_url": "https://www.gumtree.com/p/honda/honda-fr-v-mpv-2005-manual-ulez/1508869404", "title": "Honda FR-V MPV", "price": 1300, "year": 2005, "mileage": 119332, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Poplar, London", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978347", "last_seen_at": "2026-01-28T16:08:52.908783", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1508892073", "source": "gumtree", "source_id": "1508892073", "source_url": "https://www.gumtree.com/p/honda/honda-fr-v-mpv-2006-manual-1998-cc-5-doors/1508892073", "title": "Honda FR-V MPV", "price": 3250, "year": 2006, "mileage": 130009, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Notting Hill, London", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978331", "last_seen_at": "2026-01-28T16:08:52.907400", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1508608864", "source": "gumtree", "source_id": "1508608864", "source_url": "https://www.gumtree.com/p/lti/-london-taxis-international-tx4-2.5-td-elegance-4dr-diesel-automatic/1508608864", "title": "London Taxis International TX4 2.5 TD Elegance 4dr", "price": 2500, "year": 2013, "mileage": 276000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "Chelmsford, Essex", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978313", "last_seen_at": "2026-01-28T16:08:52.906035", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1507735082", "source": "gumtree", "source_id": "1507735082", "source_url": "https://www.gumtree.com/p/honda/2009-honda-fr-v-1.8-i-vtec-se-5dr-mpv-petrol-automatic/1507735082", "title": "2009 Honda FR-V 1.8 i-VTEC SE 5dr MPV", "price": 3495, "year": 2009, "mileage": 82107, "fuel_type": "petrol", "transmission": "automatic", "seats": null, "location": "Heathrow, London", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978308", "last_seen_at": "2026-01-28T16:08:52.904634", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1508407808", "source": "gumtree", "source_id": "1508407808", "source_url": "https://www.gumtree.com/p/peugeot/2008-peugeot-expert-tepee-2.0-hdi-l1-leisure-5dr-6-seats-mpv-diesel-manual/1508407808", "title": "2008 Peugeot Expert Tepee 2.0 HDi L1 Leisure 5dr", "price": 2999, "year": 2008, "mileage": 93127, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Wisbech, Cambridgeshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978303", "last_seen_at": "2026-01-28T16:08:52.903251", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1508996020", "source": "gumtree", "source_id": "1508996020", "source_url": "https://www.gumtree.com/p/honda/2007-honda-fr-v-1.8-i-vtec-ex-5dr-auto-mpv-petrol-automatic/1508996020", "title": "2007 Honda FR-V 1.8 i-VTEC EX 5dr Auto MPV", "price": 2295, "year": 2007, "mileage": 131000, "fuel_type": "petrol", "transmission": "automatic", "seats": null, "location": "Hackney, London", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978277", "last_seen_at": "2026-01-28T16:08:52.901848", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1502024171", "source": "gumtree", "source_id": "1502024171", "source_url": "https://www.gumtree.com/p/honda/2008-honda-fr-v-1.8-i-vtec-ex-5dr-mpv-petrol-automatic/1502024171", "title": "2008 Honda FR-V 1.8 i-VTEC EX 5dr MPV", "price": 3999, "year": 2008, "mileage": 115000, "fuel_type": "petrol", "transmission": "automatic", "seats": null, "location": "Chesham, Buckinghamshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978251", "last_seen_at": "2026-01-28T16:08:52.900409", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1508818596", "source": "gumtree", "source_id": "1508818596", "source_url": "https://www.gumtree.com/p/citroen/2009-09-citroen-dispatch-combi-1.6-hdi-l1-6-seats-a-c-mot-01-26-camper-px-swaps/1508818596", "title": "2009 CITROEN DISPATCH COMBI 1.6 HDI L1 6 SEATS", "price": 2495, "year": 2009, "mileage": 162951, "fuel_type": "diesel", "transmission": null, "seats": null, "location": "Coventry, West Midlands", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978246", "last_seen_at": "2026-01-28T16:08:52.898997", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1509037113", "source": "gumtree", "source_id": "1509037113", "source_url": "https://www.gumtree.com/p/honda/honda-fr-v-mpv-2009-manual-2204-cc-5-doors/1509037113", "title": "Honda FR-V MPV", "price": 1650, "year": 2009, "mileage": 173000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Thetford, Norfolk", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978241", "last_seen_at": "2026-01-28T16:08:52.897556", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1508417236", "source": "gumtree", "source_id": "1508417236", "source_url": "https://www.gumtree.com/p/toyota/toyota-picnic-2.0-se-automatic-6seat-aircon-1f-owner-jan-2027-mot-v-tidy/1508417236", "title": "TOYOTA PICNIC 2.0 SE AUTOMATIC 6SEAT", "price": 1999, "year": 2000, "mileage": 102000, "fuel_type": "petrol", "transmission": "automatic", "seats": null, "location": "Bradford, West Yorkshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978225", "last_seen_at": "2026-01-28T16:08:52.896147", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1509087240", "source": "gumtree", "source_id": "1509087240", "source_url": "https://www.gumtree.com/p/honda/honda-fr-v-mpv-2009-other-1799-cc-5-doors/1509087240", "title": "Honda FR-V MPV", "price": 600, "year": 2009, "mileage": 210000, "fuel_type": "petrol", "transmission": null, "seats": null, "location": "Charlton, London", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978209", "last_seen_at": "2026-01-28T16:08:52.894734", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1509088468", "source": "gumtree", "source_id": "1509088468", "source_url": "https://www.gumtree.com/p/mercedes-benz/2007-07-mercedes-r320-sport-crdi-auto-diesel-mot-08-26-6-seater/1509088468", "title": "2007 MERCEDES R320 SPORT CRDI AUTO", "price": 2795, "year": 2007, "mileage": 113000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "Bury, Manchester", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978203", "last_seen_at": "2026-01-28T16:08:52.893296", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1504546243", "source": "gumtree", "source_id": "1504546243", "source_url": "https://www.gumtree.com/p/honda/2009-honda-fr-v-1.8-i-vtec-ex-5dr-auto-mpv-petrol-automatic/1504546243", "title": "2009 Honda FR-V 1.8 i-VTEC EX 5dr Auto MPV", "price": 3995, "year": 2009, "mileage": 100100, "fuel_type": "petrol", "transmission": "automatic", "seats": null, "location": "East Ham, London", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978177", "last_seen_at": "2026-01-28T16:08:52.891836", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1509100973", "source": "gumtree", "source_id": "1509100973", "source_url": "https://www.gumtree.com/p/honda/honda-fr-v-mpv-2005-manual-1998-cc-5-doors/1509100973", "title": "Honda FR-V MPV", "price": 995, "year": 2005, "mileage": 147392, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Chichester, West Sussex", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978160", "last_seen_at": "2026-01-28T16:08:52.890325", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1509114175", "source": "gumtree", "source_id": "1509114175", "source_url": "https://www.gumtree.com/p/honda/honda-fr-v-6-seater-ulez-free/1509114175", "title": "Honda FR-V 6 seater", "price": 1050, "year": 2009, "mileage": 142243, "fuel_type": "petrol", "transmission": null, "seats": null, "location": "Seven Sisters, London", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978155", "last_seen_at": "2026-01-28T16:08:52.888819", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1508152283", "source": "gumtree", "source_id": "1508152283", "source_url": "https://www.gumtree.com/p/fiat/2011-fiat-multipla-1.9-jtd-dynamic-5dr-6-seater-mpv-diesel-manual/1508152283", "title": "2011 Fiat Multipla 1.9 JTD Dynamic 5dr 6 SEATER", "price": 3995, "year": 2011, "mileage": 73000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Loughborough, Leicestershire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978150", "last_seen_at": "2026-01-28T16:08:52.887318", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1509142706", "source": "gumtree", "source_id": "1509142706", "source_url": "https://www.gumtree.com/p/lti/lti-txii-other-2003-manual-2402-cc-/1509142706", "title": "LTI TXII", "price": 1500, "year": 2003, "mileage": 11000, "fuel_type": null, "transmission": "manual", "seats": null, "location": "Sandwell, West Midlands", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978143", "last_seen_at": "2026-01-28T16:08:52.885798", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1508392135", "source": "gumtree", "source_id": "1508392135", "source_url": "https://www.gumtree.com/p/mercedes-benz/2006-mercedes-benz-viano-2006-mercedes-benz-viano-2.2-cdi-ambiente-rwd-lwb-automatic-mpv-diesel-.../1508392135", "title": "2006 Mercedes-Benz Viano 2.2 CDI AMBIENTE RWD LWB AUTOMATIC", "price": 3990, "year": 2006, "mileage": 124000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "Tingley, West Yorkshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978125", "last_seen_at": "2026-01-28T16:08:52.884275", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1508315399", "source": "gumtree", "source_id": "1508315399", "source_url": "https://www.gumtree.com/p/toyota/toyota-picnic-2.0-gx-auto-ac-sroof-30-srvc-stamps-1-oap-ownr-3key-vlcn/1508315399", "title": "TOYOTA PICNIC 2.0 GX AUTO", "price": 2999, "year": 1998, "mileage": 51000, "fuel_type": "petrol", "transmission": "automatic", "seats": null, "location": "Bradford, West Yorkshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T15:04:44.978107", "last_seen_at": "2026-01-28T16:08:52.882710", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null}, {"id": "gumtree_1507087367", "source": "gumtree", "source_id": "1507087367", "source_url": "https://www.gumtree.com/p/land-rover/1998-land-rover-discovery-2.5-tdi-gs-5dr-estate-diesel-manual/1507087367", "title": "1998 Land Rover Discovery 2.5 TDi GS 5dr ESTATE", "price": 3495, "year": 1998, "mileage": 170000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "East Ardsley, West Yorkshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/418d4b1352f049dda9_09095dce006f/86"], "first_seen_at": "2026-01-28T15:04:44.978079", "last_seen_at": "2026-01-28T16:08:52.881124", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null, "local_image": "images/gumtree_1507087367_0.jpg"}, {"id": "gumtree_1508947737", "source": "gumtree", "source_id": "1508947737", "source_url": "https://www.gumtree.com/p/honda/2008-honda-fr-v-1.8-i-vtec-es-5dr-auto-mpv-petrol-automatic/1508947737", "title": "2008 Honda FR-V 1.8 i-VTEC ES 5dr Auto MPV", "price": 3475, "year": 2008, "mileage": 103000, "fuel_type": "petrol", "transmission": "automatic", "seats": null, "location": "Birmingham, West Midlands", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/b9eda39c00fc4450a8_39868b84f43b/86"], "first_seen_at": "2026-01-28T15:04:44.978073", "last_seen_at": "2026-01-28T16:08:52.879539", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null, "local_image": "images/gumtree_1508947737_0.jpg"}, {"id": "gumtree_1504463811", "source": "gumtree", "source_id": "1504463811", "source_url": "https://www.gumtree.com/p/mercedes-benz/2007-mercedes-benz-r-class-r320l-cdi-se-auto-12-month-mot-free-delivery-/1504463811", "title": "2007 MERCEDES-BENZ R CLASS R320L CDI SE Auto", "price": 2495, "year": 2007, "mileage": 138000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "High Wycombe, Buckinghamshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/62aca0b9-59f1-485b-6c58-7111caae9d00/86"], "first_seen_at": "2026-01-28T15:04:44.978065", "last_seen_at": "2026-01-28T16:08:52.877876", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null, "local_image": "images/gumtree_1504463811_0.jpg"}, {"id": "gumtree_1507727469", "source": "gumtree", "source_id": "1507727469", "source_url": "https://www.gumtree.com/p/honda/2007-honda-fr-v-2.2-i-cdti-ex-5dr-mpv-diesel-manual/1507727469", "title": "2007 Honda FR-V 2.2 i-CDTi EX 5dr MPV", "price": 1495, "year": 2007, "mileage": 135301, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Chadderton, Manchester", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/1d32bef0acab4ff181_b0c96eca7910/86"], "first_seen_at": "2026-01-28T15:04:44.978045", "last_seen_at": "2026-01-28T16:08:52.876165", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null, "local_image": "images/gumtree_1507727469_0.jpg"}, {"id": "gumtree_1509194874", "source": "gumtree", "source_id": "1509194874", "source_url": "https://www.gumtree.com/p/fiat/2009-fiat-scudo-10q-1.6-multijet-90-6-seat-l1-5dr-mpv-diesel-manual/1509194874", "title": "2009 Fiat Scudo 10Q 1.6 Multijet 90 6 Seat L1 5dr MPV", "price": 1895, "year": 2009, "mileage": 145900, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Rotherham, South Yorkshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/2720253f5f474d1e97_d9fde2f4a8a9/86"], "first_seen_at": "2026-01-28T15:04:44.977875", "last_seen_at": "2026-01-28T16:08:52.873919", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "22859adb"], "notified_at": null, "local_image": "images/gumtree_1509194874_0.jpg"}, {"id": "autotrader_202601249398492", "source": "autotrader", "source_id": "202601249398492", "source_url": "https://www.autotrader.co.uk/car-details/202601249398492?dueToME&sort=relevance&searchId=98620af8-3ce7-4b1d-8304-907abcfcdf0c&minimum-seats=6&page=1&postcode=OX290AR&price-to=4000&radius=30&advertising-location=at_cars&fromsra&backLinkQueryParams=postcode%3DOX290AR%26radius%3D30%26price-to%3D4000%26minimum-seats%3D6%26flrfc%3D1", "title": "Land Rover Discovery 3 2.7 TD V6 HSE Station Wagon 5dr", "price": 3900, "year": 2008, "mileage": 169000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": null, "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/fd3293c081924ec099ed305503c76c5d.jpg"], "first_seen_at": "2026-01-28T14:48:28.512253", "last_seen_at": "2026-01-28T22:57:50.880812", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["22859adb", "93ff72b2"], "notified_at": null, "local_image": "images/autotrader_202601249398492_0.jpg"}, {"id": "autotrader_202512098489191", "source": "autotrader", "source_id": "202512098489191", "source_url": "https://www.autotrader.co.uk/car-details/202512098489191", "title": "Volkswagen Touran 1.9 TDI BlueMotion Tech Match 5dr", "price": 3295, "year": 2009, "mileage": 106400, "fuel_type": "diesel", "transmission": null, "seats": null, "location": null, "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/37a98932f6a24d7bbdaebd010a8cd0ea.jpg"], "first_seen_at": "2026-01-28T14:48:28.512251", "last_seen_at": "2026-01-29T18:04:15.326105", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["22859adb", "93ff72b2"], "notified_at": null, "local_image": "images/autotrader_202512098489191_0.jpg"}, {"id": "autotrader_202509186447637", "source": "autotrader", "source_id": "202509186447637", "source_url": "https://www.autotrader.co.uk/car-details/202509186447637?dueToME&sort=relevance&searchId=8f1e9576-2cf2-4292-ad0e-2ee79e4dffc7&page=1&postcode=OX290AR&price-to=4000&radius=30&seats_values=6&seats_values=7&seats_values=8&seats_values=9&advertising-location=at_cars&fromsra&backLinkQueryParams=postcode%3DOX290AR%26radius%3D30%26price-to%3D4000%26seats_values%3D6%26seats_values%3D7%26seats_values%3D8%26seats_values%3D9%26flrfc%3D1", "title": "Nissan Qashqai+2 1.5 dCi Acenta 2WD Euro 5 5dr", "price": 3699, "year": 2013, "mileage": 81125, "fuel_type": "diesel", "transmission": null, "seats": null, "location": null, "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/703a8f98db254c72ab47e5f52ca86ecb.jpg"], "first_seen_at": "2026-01-28T14:48:28.512249", "last_seen_at": "2026-02-01T15:59:32.381093", "is_gone": false, "gone_at": null, "search_ids": ["22859adb", "93ff72b2"], "notified_at": null, "local_image": "images/autotrader_202509186447637_0.jpg"}, {"id": "autotrader_202601229340030", "source": "autotrader", "source_id": "202601229340030", "source_url": "https://www.autotrader.co.uk/car-details/202601229340030?dueToME&sort=relevance&searchId=8f1e9576-2cf2-4292-ad0e-2ee79e4dffc7&page=1&postcode=OX290AR&price-to=4000&radius=30&seats_values=6&seats_values=7&seats_values=8&seats_values=9&advertising-location=at_cars&fromsra&backLinkQueryParams=postcode%3DOX290AR%26radius%3D30%26price-to%3D4000%26seats_values%3D6%26seats_values%3D7%26seats_values%3D8%26seats_values%3D9%26flrfc%3D1", "title": "Nissan Qashqai+2 1.5 dCi Acenta 2WD Euro 5 5dr", "price": 3990, "year": 2012, "mileage": 78000, "fuel_type": "diesel", "transmission": null, "seats": null, "location": null, "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/51acaf3765cb4175b3166a01b13b4c69.jpg"], "first_seen_at": "2026-01-28T14:48:28.512246", "last_seen_at": "2026-02-01T15:59:32.376105", "is_gone": false, "gone_at": null, "search_ids": ["22859adb", "93ff72b2"], "notified_at": null, "local_image": "images/autotrader_202601229340030_0.jpg"}, {"id": "autotrader_202601199250967", "source": "autotrader", "source_id": "202601199250967", "source_url": "https://www.autotrader.co.uk/car-details/202601199250967?sort=relevance&searchId=8f1e9576-2cf2-4292-ad0e-2ee79e4dffc7&page=1&postcode=OX290AR&price-to=4000&radius=30&seats_values=6&seats_values=7&seats_values=8&seats_values=9&advertising-location=at_cars&fromsra&backLinkQueryParams=postcode%3DOX290AR%26radius%3D30%26price-to%3D4000%26seats_values%3D6%26seats_values%3D7%26seats_values%3D8%26seats_values%3D9%26flrfc%3D1", "title": "SsangYong Rodius 2.0 e-XDi ES Euro 5 5dr", "price": 3495, "year": 2013, "mileage": 66000, "fuel_type": "diesel", "transmission": null, "seats": null, "location": "Swindon (20 miles)", "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/159bdb571df34842bc8e53fa85823ed5.jpg"], "first_seen_at": "2026-01-28T14:48:28.512243", "last_seen_at": "2026-02-01T15:59:32.378776", "is_gone": false, "gone_at": null, "search_ids": ["22859adb", "93ff72b2"], "notified_at": null, "local_image": "images/autotrader_202601199250967_0.jpg"}, {"id": "autotrader_202511228075435", "source": "autotrader", "source_id": "202511228075435", "source_url": "https://www.autotrader.co.uk/car-details/202511228075435", "title": "Vauxhall Zafira Tourer 1.8 16V Tech Line Euro 5 5dr", "price": 3990, "year": 2014, "mileage": 82000, "fuel_type": "petrol", "transmission": null, "seats": null, "location": "Swindon (18 miles)", "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/3c0ce3fb31bb4864bbcccf99affbde5c.jpg"], "first_seen_at": "2026-01-28T14:48:28.512240", "last_seen_at": "2026-01-29T18:04:15.320833", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["22859adb", "93ff72b2"], "notified_at": null, "local_image": "images/autotrader_202511228075435_0.jpg"}, {"id": "autotrader_202511187971576", "source": "autotrader", "source_id": "202511187971576", "source_url": "https://www.autotrader.co.uk/car-details/202511187971576?dueToME&sort=relevance&searchId=8f1e9576-2cf2-4292-ad0e-2ee79e4dffc7&page=1&postcode=OX290AR&price-to=4000&radius=30&seats_values=6&seats_values=7&seats_values=8&seats_values=9&advertising-location=at_cars&fromsra&backLinkQueryParams=postcode%3DOX290AR%26radius%3D30%26price-to%3D4000%26seats_values%3D6%26seats_values%3D7%26seats_values%3D8%26seats_values%3D9%26flrfc%3D1", "title": "Vauxhall Zafira Tourer 2.0 CDTi Exclusiv Euro 5 5dr", "price": 3390, "year": 2014, "mileage": 86454, "fuel_type": "diesel", "transmission": null, "seats": null, "location": null, "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/f8e3acd58c4542a7a13047d111105801.jpg"], "first_seen_at": "2026-01-28T14:48:28.512236", "last_seen_at": "2026-02-01T15:59:32.383209", "is_gone": false, "gone_at": null, "search_ids": ["22859adb", "93ff72b2"], "notified_at": null, "local_image": "images/autotrader_202511187971576_0.jpg"}, {"id": "cargurus_156752278", "source": "cargurus", "source_id": "156752278", "source_url": "https://www.cargurus.co.uk/Cars/inventorylisting/viewDetailsFilterViewInventoryListing.action?seatings=6&seatings=7&seatings=8&seatings=9&zip=OX29%200AR&distance=25&maxPrice=4000&isDeliveryEnabled=true&sortType=DEAL_SCORE&sortDir=ASC#listing=156752278/NONE/DEFAULT", "title": "2013 KGM / Ssangyong Rodius 2.0TD ES", "price": 3495, "year": 2013, "mileage": 66000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Swindon", "distance_miles": null, "description": "", "images": ["https://static-eu.cargurus.com/images/forsale/2026/01/19/16/09/2013_kgm___ssangyong_rodius-pic-1015072225473192087-1024x768.jpeg"], "first_seen_at": "2026-01-28T14:48:07.235862", "last_seen_at": "2026-02-01T15:59:08.130244", "is_gone": false, "gone_at": null, "search_ids": ["22859adb", "93ff72b2"], "notified_at": null, "local_image": "images/cargurus_156752278_0.jpg"}, {"id": "cargurus_156505566", "source": "cargurus", "source_id": "156505566", "source_url": "https://www.cargurus.co.uk/Cars/inventorylisting/viewDetailsFilterViewInventoryListing.action?seatings=6&seatings=7&seatings=8&seatings=9&zip=OX29%200AR&distance=25&maxPrice=4000&isDeliveryEnabled=true&sortType=DEAL_SCORE&sortDir=ASC#listing=156505566/NONE/DEFAULT", "title": "2014 Vauxhall Zafira Tourer 1.8 Tech Line", "price": 3990, "year": 2014, "mileage": 82000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Swindon", "distance_miles": null, "description": "", "images": ["https://static-eu.cargurus.com/images/forsale/2025/12/05/15/21/2014_vauxhall_zafira_tourer-pic-1455496209701492168-1024x768.jpeg"], "first_seen_at": "2026-01-28T14:48:07.235822", "last_seen_at": "2026-02-01T15:59:08.125361", "is_gone": false, "gone_at": null, "search_ids": ["22859adb", "93ff72b2"], "notified_at": null, "local_image": "images/cargurus_156505566_0.jpg"}, {"id": "gumtree_1508555611", "source": "gumtree", "source_id": "1508555611", "source_url": "https://www.gumtree.com/p/fiat/fiat-500-1.2-500-1.2-69hp-pop-2014/1508555611", "title": "FIAT 500 1.2 500 69hp Pop", "price": 1995, "year": 2014, "mileage": 123000, "fuel_type": "petrol", "transmission": null, "seats": null, "location": "Hungerford, Berkshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692874", "last_seen_at": "2026-01-28T14:47:37.692875", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1508555614", "source": "gumtree", "source_id": "1508555614", "source_url": "https://www.gumtree.com/p/ford/ford-fiesta-1.3-zetec-2015/1508555614", "title": "FORD FIESTA 1.3 Zetec", "price": 3495, "year": 2015, "mileage": 100000, "fuel_type": "petrol", "transmission": null, "seats": null, "location": "Hungerford, Berkshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692856", "last_seen_at": "2026-01-28T14:47:37.692857", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1508597780", "source": "gumtree", "source_id": "1508597780", "source_url": "https://www.gumtree.com/p/peugeot/2014-peugeot-208-1.2-vti-style-3dr-hatchback-petrol-manual/1508597780", "title": "Peugeot 208 1.2 VTi Style 3dr Hatchback", "price": 2850, "year": 2014, "mileage": 82000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Banbury, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692846", "last_seen_at": "2026-01-28T14:47:37.692847", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1508597782", "source": "gumtree", "source_id": "1508597782", "source_url": "https://www.gumtree.com/p/vauxhall/2016-vauxhall-insignia-2.0-cdti-170-ecoflex-sri-nav-5dr-start-stop-hatchback-diesel-manual/1508597782", "title": "Vauxhall Insignia 2.0 CDTi [170] ecoFLEX SRi Nav 5dr Hatchback", "price": 3250, "year": 2016, "mileage": 109000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Banbury, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692839", "last_seen_at": "2026-01-28T14:47:37.692840", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1508597783", "source": "gumtree", "source_id": "1508597783", "source_url": "https://www.gumtree.com/p/volkswagen/2010-volkswagen-golf-1.4-s-5dr-hatchback-petrol-manual/1508597783", "title": "Volkswagen Golf 1.4 S 5dr Hatchback", "price": 3250, "year": 2010, "mileage": 84000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Banbury, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692830", "last_seen_at": "2026-01-28T14:47:37.692830", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1508597779", "source": "gumtree", "source_id": "1508597779", "source_url": "https://www.gumtree.com/p/peugeot/2014-peugeot-208-1.0-vti-active-3dr-hatchback-petrol-manual/1508597779", "title": "Peugeot 208 1.0 VTi Active 3dr Hatchback", "price": 2750, "year": 2014, "mileage": 55000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Banbury, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692816", "last_seen_at": "2026-01-28T14:47:37.692817", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1506641013", "source": "gumtree", "source_id": "1506641013", "source_url": "https://www.gumtree.com/p/ford/ford-b-max-mpv-2013-semi-auto-1596-cc-5-doors/1506641013", "title": "Ford B-MAX MPV", "price": 3500, "year": 2013, "mileage": 98340, "fuel_type": "petrol", "transmission": "semi-auto", "seats": null, "location": "Moreton-in-Marsh, Gloucestershire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692809", "last_seen_at": "2026-01-28T14:47:37.692810", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1509189504", "source": "gumtree", "source_id": "1509189504", "source_url": "https://www.gumtree.com/p/skoda/2010-skoda-fabia-1.2-1-5dr-hatchback-petrol-manual/1509189504", "title": "Skoda Fabia 1.2 1 5dr Hatchback", "price": 2450, "year": 2010, "mileage": 107527, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Swindon, Wiltshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692800", "last_seen_at": "2026-01-28T14:47:37.692801", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1507737311", "source": "gumtree", "source_id": "1507737311", "source_url": "https://www.gumtree.com/p/mini/2015-mini-hatch-1.5-cooper-3dr-hatchback-petrol-manual/1507737311", "title": "MINI Hatch 1.5 Cooper 3dr Hatchback", "price": 3495, "year": 2015, "mileage": 137000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Swindon, Wiltshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692793", "last_seen_at": "2026-01-28T14:47:37.692794", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1507736728", "source": "gumtree", "source_id": "1507736728", "source_url": "https://www.gumtree.com/p/seat/2011-seat-ibiza-1.4-16v-chill-sport-coupe-euro-5-3dr-hatchback-petrol-manual/1507736728", "title": "SEAT Ibiza 1.4 16V Chill Sport Coupe Euro 5 3dr Hatchback", "price": 3295, "year": 2011, "mileage": 69000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Swindon, Wiltshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692787", "last_seen_at": "2026-01-28T14:47:37.692787", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1509190269", "source": "gumtree", "source_id": "1509190269", "source_url": "https://www.gumtree.com/p/volkswagen/volkswagen-polo-hatchback-2012-manual-1198-cc-3-doors/1509190269", "title": "Volkswagen POLO Hatchback", "price": 500, "year": 2012, "mileage": 116840, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Swindon, Wiltshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692779", "last_seen_at": "2026-01-28T14:47:37.692780", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1505110731", "source": "gumtree", "source_id": "1505110731", "source_url": "https://www.gumtree.com/p/citroen/2012-citroen-ds3-1.6-e-hdi-airdream-dstyle-3dr-hatchback-diesel-manual/1505110731", "title": "Citroen DS3 1.6 e-HDi Airdream DStyle 3dr Hatchback", "price": 3700, "year": 2012, "mileage": 44872, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Eynsham, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692772", "last_seen_at": "2026-01-28T14:47:37.692773", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1509191335", "source": "gumtree", "source_id": "1509191335", "source_url": "https://www.gumtree.com/p/bmw/bmw-3-series-saloon-2006-manual-1995-cc-4-doors/1509191335", "title": "BMW 3 SERIES Saloon", "price": 1999, "year": 2006, "mileage": 83000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Highworth, Wiltshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692763", "last_seen_at": "2026-01-28T14:47:37.692764", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1503309448", "source": "gumtree", "source_id": "1503309448", "source_url": "https://www.gumtree.com/p/vauxhall/2014-vauxhall-adam-1.2-ecoflex-16v-slam-hatchback-3dr-petrol-manual-euro-5-s-s-70-ps-hatchbac.../1503309448", "title": "Vauxhall ADAM 1.2 ecoFLEX 16v SLAM Hatchback", "price": 2699, "year": 2014, "mileage": 109750, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692755", "last_seen_at": "2026-01-28T14:47:37.692756", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1509191616", "source": "gumtree", "source_id": "1509191616", "source_url": "https://www.gumtree.com/p/vauxhall/vauxhall-mokka-hatchback-2015-manual-1598-cc-5-doors/1509191616", "title": "Vauxhall MOKKA Hatchback", "price": 2500, "year": 2015, "mileage": 92436, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Banbury, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692745", "last_seen_at": "2026-01-28T14:47:37.692746", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1509192383", "source": "gumtree", "source_id": "1509192383", "source_url": "https://www.gumtree.com/p/ford/ford-focus-hatchback-2010-manual-1596-cc-5-doors/1509192383", "title": "Ford FOCUS Hatchback", "price": 1550, "year": 2010, "mileage": 116000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Bicester, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692727", "last_seen_at": "2026-01-28T14:47:37.692727", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1507878257", "source": "gumtree", "source_id": "1507878257", "source_url": "https://www.gumtree.com/p/jaguar/2012-jaguar-xf-2.2d-premium-luxury-4dr-auto-saloon-diesel-automatic/1507878257", "title": "Jaguar XF 2.2d Premium Luxury 4dr Saloon", "price": 3295, "year": 2012, "mileage": 149000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692720", "last_seen_at": "2026-01-28T14:47:37.692720", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1507878549", "source": "gumtree", "source_id": "1507878549", "source_url": "https://www.gumtree.com/p/volkswagen/2013-volkswagen-polo-1.2-60-match-edition-5dr-hatchback-petrol-manual/1507878549", "title": "Volkswagen Polo 1.2 60 Match Edition 5dr Hatchback", "price": 3295, "year": 2013, "mileage": 120000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692713", "last_seen_at": "2026-01-28T14:47:37.692713", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1508322454", "source": "gumtree", "source_id": "1508322454", "source_url": "https://www.gumtree.com/p/nissan/2014-nissan-juke-1.6-n-tec-5dr-hatchback-petrol-manual/1508322454", "title": "Nissan Juke 1.6 N-Tec 5dr Hatchback", "price": 2995, "year": 2014, "mileage": 102000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692701", "last_seen_at": "2026-01-28T14:47:37.692701", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1508028101", "source": "gumtree", "source_id": "1508028101", "source_url": "https://www.gumtree.com/p/jaguar/2014-jaguar-xf-3.0d-v6-premium-luxury-4dr-auto-start-stop-saloon-diesel-automatic/1508028101", "title": "Jaguar XF 3.0d V6 Premium Luxury Saloon", "price": 3695, "year": 2014, "mileage": 133000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692691", "last_seen_at": "2026-01-28T14:47:37.692691", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1508029431", "source": "gumtree", "source_id": "1508029431", "source_url": "https://www.gumtree.com/p/ford/2012-ford-focus-1.6-125-titanium-5dr-powershift-hatchback-petrol-automatic/1508029431", "title": "Ford Focus 1.6 125 Titanium 5dr Hatchback", "price": 3795, "year": 2012, "mileage": 112000, "fuel_type": "petrol", "transmission": "automatic", "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692676", "last_seen_at": "2026-01-28T14:47:37.692676", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1507878432", "source": "gumtree", "source_id": "1507878432", "source_url": "https://www.gumtree.com/p/toyota/2007-toyota-auris-1.6-vvti-tr-5dr-hatchback-petrol-manual/1507878432", "title": "Toyota Auris 1.6 VVTi TR 5dr Hatchback", "price": 1595, "year": 2007, "mileage": 106000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692666", "last_seen_at": "2026-01-28T14:47:37.692666", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1509194153", "source": "gumtree", "source_id": "1509194153", "source_url": "https://www.gumtree.com/p/nissan/-nissan-micra-1.0-16v-tempest-3dr-petrol-manual/1509194153", "title": "Nissan Micra 1.0 16v Tempest", "price": 1745, "year": 2003, "mileage": 82000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Swindon, Wiltshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-28T14:47:37.692658", "last_seen_at": "2026-01-28T14:47:37.692659", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null}, {"id": "gumtree_1508812782", "source": "gumtree", "source_id": "1508812782", "source_url": "https://www.gumtree.com/p/ford/ford-s-max-2.0-tdci-titanium-5dr/1508812782", "title": "FORD S-MAX 2.0 TDCi Titanium 5dr", "price": 1750, "year": 2007, "mileage": 112000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Swindon, Wiltshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/89977886f0a84e41be_63357aeb6dd0/86"], "first_seen_at": "2026-01-28T14:47:37.692651", "last_seen_at": "2026-02-01T15:58:47.886668", "is_gone": false, "gone_at": null, "search_ids": ["22859adb", "93ff72b2"], "notified_at": null, "local_image": "images/gumtree_1508812782_0.jpg"}, {"id": "gumtree_1508813185", "source": "gumtree", "source_id": "1508813185", "source_url": "https://www.gumtree.com/p/mazda/mazda-2-hatchback-2009-manual-1349-cc-5-doors/1508813185", "title": "Mazda 2 Hatchback", "price": 1495, "year": 2009, "mileage": 50660, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/c74ac0712bb9493498_3324dffeaccb/86"], "first_seen_at": "2026-01-28T14:47:37.692643", "last_seen_at": "2026-01-28T14:47:37.692643", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null, "local_image": "images/gumtree_1508813185_0.jpg"}, {"id": "gumtree_1509107735", "source": "gumtree", "source_id": "1509107735", "source_url": "https://www.gumtree.com/p/honda/honda-jazz-hatchback-2003-manual-1339-cc-5-doors/1509107735", "title": "Honda JAZZ Hatchback", "price": 999, "year": 2003, "mileage": 113870, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Chipping Norton, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/4f24866cd77a4801bc_53cb25c01058/86"], "first_seen_at": "2026-01-28T14:47:37.692633", "last_seen_at": "2026-01-28T14:47:37.692634", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null, "local_image": "images/gumtree_1509107735_0.jpg"}, {"id": "gumtree_1508943514", "source": "gumtree", "source_id": "1508943514", "source_url": "https://www.gumtree.com/p/bmw/bmw-3-series-estate-2014-manual-1995-cc-5-doors/1508943514", "title": "BMW 3 SERIES Estate", "price": 800, "year": 2014, "mileage": 226591, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Cheltenham, Gloucestershire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/e994a73d88fb42c38c_5195c081f3ac/86"], "first_seen_at": "2026-01-28T14:47:37.692622", "last_seen_at": "2026-01-28T14:47:37.692623", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null, "local_image": "images/gumtree_1508943514_0.jpg"}, {"id": "gumtree_1508698857", "source": "gumtree", "source_id": "1508698857", "source_url": "https://www.gumtree.com/p/peugeot/urgent-sale-needed.-peugeot-3008-1.6-hdi-hatchback-2011-manual-5-doors/1508698857", "title": "Peugeot 3008 1.6 HDI Hatchback", "price": 950, "year": 2011, "mileage": 108026, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Wantage, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/ae27a6bd4d8442ef87_6fd046350a57/86"], "first_seen_at": "2026-01-28T14:47:37.692612", "last_seen_at": "2026-01-28T14:47:37.692612", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null, "local_image": "images/gumtree_1508698857_0.jpg"}, {"id": "gumtree_1509101176", "source": "gumtree", "source_id": "1509101176", "source_url": "https://www.gumtree.com/p/nissan/nissan-qashqai-hatchback-2011-other-1995-cc-5-doors/1509101176", "title": "Nissan QASHQAI Hatchback", "price": 2700, "year": 2011, "mileage": 145000, "fuel_type": "diesel", "transmission": null, "seats": null, "location": "Bicester, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/9a9b06be5fbe470fa0_5fe1bcbc7731/86"], "first_seen_at": "2026-01-28T14:47:37.692552", "last_seen_at": "2026-01-28T14:47:37.692571", "is_gone": false, "gone_at": null, "search_ids": ["93ff72b2"], "notified_at": null, "local_image": "images/gumtree_1509101176_0.jpg"}, {"id": "pistonheads_19594433", "source": "pistonheads", "source_id": "19594433", "source_url": "https://www.pistonheads.com/buy/listing/19594433", "title": "Peugeot 5008 2.0 HDi Allure MPV 5dr Diesel Manual Euro 5 (150 ps)", "price": 3495, "year": 2014, "mileage": 134700, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "12 miles away", "distance_miles": null, "description": "", "images": ["https://img.pistonheads.com/Fullsize/peugeot/5008/2-0-hdi-allure-mpv-5dr-diesel-manual-euro-5-150-ps/peugeot-5008-2-0-hdi-allure-mpv-5dr-diesel-manual-euro-5-150-ps-1374974662-1.jpg?resize=600"], "first_seen_at": "2026-01-27T16:11:43.911283", "last_seen_at": "2026-02-01T16:00:05.345700", "is_gone": false, "gone_at": null, "search_ids": ["22859adb", "default-7-seater"], "notified_at": null, "local_image": "images/pistonheads_19594433_0.jpg"}, {"id": "autotrader_202512138569291", "source": "autotrader", "source_id": "202512138569291", "source_url": "https://www.autotrader.co.uk/car-details/202512138569291?sort=relevance&searchId=d351062a-5bc3-4798-b1d1-df6d4855cac6&page=1&postcode=OX290AR&price-to=4000&radius=15&seats_values=7&seats_values=8&seats_values=9&advertising-location=at_cars&fromsra&backLinkQueryParams=postcode%3DOX290AR%26radius%3D15%26price-to%3D4000%26seats_values%3D7%26seats_values%3D8%26seats_values%3D9%26flrfc%3D1", "title": "Vauxhall Zafira 1.7 CDTi ecoFLEX Exclusiv Euro 5 5dr", "price": 1999, "year": 2011, "mileage": 78000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "Oxford", "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/b5a48e7cb36f4bbb9f2d84cd53716d6a.jpg"], "first_seen_at": "2026-01-27T16:11:30.963669", "last_seen_at": "2026-02-01T15:56:53.424002", "is_gone": false, "gone_at": null, "search_ids": ["default-7-seater"], "notified_at": null, "local_image": "images/autotrader_202512138569291_0.jpg"}, {"id": "autotrader_202601129073248", "source": "autotrader", "source_id": "202601129073248", "source_url": "https://www.autotrader.co.uk/car-details/202601129073248?sort=relevance&searchId=d351062a-5bc3-4798-b1d1-df6d4855cac6&page=1&postcode=OX290AR&price-to=4000&radius=15&seats_values=7&seats_values=8&seats_values=9&advertising-location=at_cars&fromsra&backLinkQueryParams=postcode%3DOX290AR%26radius%3D15%26price-to%3D4000%26seats_values%3D7%26seats_values%3D8%26seats_values%3D9%26flrfc%3D1", "title": "Ford S-Max 2.0 TDCi Zetec Powershift Euro 5 5dr", "price": 2500, "year": 2012, "mileage": 67978, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "Oxford", "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/d818d251aeb846fcb0c8c4a17cc3be8d.jpg"], "first_seen_at": "2026-01-27T16:11:30.963663", "last_seen_at": "2026-02-01T15:56:53.421263", "is_gone": false, "gone_at": null, "search_ids": ["default-7-seater"], "notified_at": null, "local_image": "images/autotrader_202601129073248_0.jpg"}, {"id": "autotrader_202509096175121", "source": "autotrader", "source_id": "202509096175121", "source_url": "https://www.autotrader.co.uk/car-details/202509096175121?sort=relevance&searchId=b493f989-382a-474f-b993-c0cdee340355&page=1&postcode=OX290AR&price-to=4000&radius=15&seats_values=7&seats_values=8&seats_values=9&advertising-location=at_cars&fromsra&backLinkQueryParams=postcode%3DOX290AR%26radius%3D15%26price-to%3D4000%26seats_values%3D7%26seats_values%3D8%26seats_values%3D9%26flrfc%3D1", "title": "Mitsubishi Outlander 2.2 DI-D GX4 Auto 4WD Euro 5 (s/s) 5dr", "price": 4000, "year": 2013, "mileage": 115000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "Kidlington (10 miles)", "distance_miles": null, "description": "", "images": ["https://m.atcdn.co.uk/a/media/w480/bc44380244d24642884cd188c7a20fea.jpg"], "first_seen_at": "2026-01-27T16:11:30.963618", "last_seen_at": "2026-01-29T13:49:43.416675", "is_gone": true, "gone_at": "2026-01-30T14:38:48.469483", "search_ids": ["93ff72b2", "default-7-seater", "22859adb"], "notified_at": null, "local_image": "images/autotrader_202509096175121_0.jpg"}, {"id": "cargurus_156603308", "source": "cargurus", "source_id": "156603308", "source_url": "https://www.cargurus.co.uk/Cars/inventorylisting/viewDetailsFilterViewInventoryListing.action?seatings=6&seatings=7&seatings=8&seatings=9&zip=OX29%200AR&distance=25&maxPrice=4000&isDeliveryEnabled=true&sortType=DEAL_SCORE&sortDir=ASC#listing=156603308/NONE/DEFAULT", "title": "2014 Peugeot 5008 2.0HDi Allure", "price": 3495, "year": 2014, "mileage": 134700, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Faringdon", "distance_miles": null, "description": "", "images": ["https://static-eu.cargurus.com/images/forsale/2025/12/12/18/23/2014_peugeot_5008-pic-2456475471068299790-1024x768.jpeg"], "first_seen_at": "2026-01-27T16:11:08.812045", "last_seen_at": "2026-02-01T15:59:08.127967", "is_gone": false, "gone_at": null, "search_ids": ["default-7-seater", "93ff72b2", "22859adb"], "notified_at": null, "local_image": "images/cargurus_156603308_0.jpg"}, {"id": "gumtree_1507288786", "source": "gumtree", "source_id": "1507288786", "source_url": "https://www.gumtree.com/p/vauxhall/2013-vauxhall-meriva-1.4t-16v-se-5dr-mpv-petrol-manual/1507288786", "title": "2013 Vauxhall Meriva 1.4T 16V SE 5dr MPV", "price": 3795, "year": 2013, "mileage": 65000, "fuel_type": "petrol", "transmission": "manual", "seats": null, "location": "Burford, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-27T16:10:36.862014", "last_seen_at": "2026-01-28T14:46:05.268148", "is_gone": true, "gone_at": "2026-01-30T15:00:29.067604", "search_ids": ["default-7-seater"], "notified_at": null}, {"id": "gumtree_1508157836", "source": "gumtree", "source_id": "1508157836", "source_url": "https://www.gumtree.com/p/toyota/toyota-corolla-verso-mpv-jul-2005-7-seater-semi-auto-petrol-1794-cc-5-doors/1508157836", "title": "Toyota COROLLA VERSO MPV 7-seater", "price": 1100, "year": 2005, "mileage": 175376, "fuel_type": "petrol", "transmission": "semi-auto", "seats": null, "location": "Marston, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/49fd3c6bd2be435f82_8f2bb6ad46d7/86"], "first_seen_at": "2026-01-27T16:10:36.862009", "last_seen_at": "2026-01-31T18:07:02.478017", "is_gone": true, "gone_at": "2026-02-01T15:56:22.138891", "search_ids": ["default-7-seater"], "notified_at": null, "local_image": "images/gumtree_1508157836_0.jpg"}, {"id": "gumtree_1505963839", "source": "gumtree", "source_id": "1505963839", "source_url": "https://www.gumtree.com/p/citroen/citroen-c4-grand-picasso-mpv-2011-semi-auto-1560-cc-5-doors/1505963839", "title": "Citroen C4 GRAND PICASSO MPV 2011 Semi-Auto 1560cc 5 doors", "price": 750, "year": 2011, "mileage": 107599, "fuel_type": "diesel", "transmission": "semi-automatic", "seats": null, "location": "Headington, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/ff97b930-8198-411f-5ade-060a7be85700/86"], "first_seen_at": "2026-01-27T16:10:36.862004", "last_seen_at": "2026-02-01T15:56:22.133953", "is_gone": true, "gone_at": "2026-02-01T15:58:47.945691", "search_ids": ["22859adb", "default-7-seater"], "notified_at": null, "local_image": "images/gumtree_1505963839_0.jpg"}, {"id": "gumtree_1508695471", "source": "gumtree", "source_id": "1508695471", "source_url": "https://www.gumtree.com/p/kia/kia-sedona-mpv-2009-manual-2902-cc-5-doors/1508695471", "title": "Kia SEDONA MPV 2009 Manual 2902 cc 5 doors", "price": 1690, "year": 2009, "mileage": 104793, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Marston, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/10ff297e173e409387_410dcd24d027/86"], "first_seen_at": "2026-01-27T16:10:36.861998", "last_seen_at": "2026-02-01T15:58:47.933280", "is_gone": false, "gone_at": null, "search_ids": ["22859adb", "default-7-seater"], "notified_at": null, "local_image": "images/gumtree_1508695471_0.jpg"}, {"id": "gumtree_1508850263", "source": "gumtree", "source_id": "1508850263", "source_url": "https://www.gumtree.com/p/toyota/toyota-corolla-verso-mpv-2008-manual-2231-cc-5-doors/1508850263", "title": "Toyota COROLLA VERSO MPV", "price": 850, "year": 2008, "mileage": 138674, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-27T16:10:36.861992", "last_seen_at": "2026-01-27T16:10:36.861992", "is_gone": true, "gone_at": "2026-01-30T15:00:29.067603", "search_ids": ["default-7-seater"], "notified_at": null}, {"id": "gumtree_1508869347", "source": "gumtree", "source_id": "1508869347", "source_url": "https://www.gumtree.com/p/mercedes-benz/mercedes-benz-b-class-mpv-2007-semi-auto-1992-cc-5-doors/1508869347", "title": "2007 Mercedes-Benz B CLASS MPV", "price": 1250, "year": 2007, "mileage": 90000, "fuel_type": "diesel", "transmission": "semi-automatic", "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/52ce3bc6d1d44cc0bc_0fa6967247b4/86"], "first_seen_at": "2026-01-27T16:10:36.861985", "last_seen_at": "2026-01-28T14:46:05.265911", "is_gone": true, "gone_at": "2026-01-30T15:00:29.067602", "search_ids": ["default-7-seater"], "notified_at": null, "local_image": "images/gumtree_1508869347_0.jpg"}, {"id": "gumtree_1507740435", "source": "gumtree", "source_id": "1507740435", "source_url": "https://www.gumtree.com/p/renault/2011-renault-scenic-1.5-dci-dynamique-tomtom-edc-euro-5-5dr-mpv-diesel-automatic/1507740435", "title": "Renault Scenic 1.5 dCi Dynamique TomTom EDC Euro 5 5dr MPV", "price": 3995, "year": 2011, "mileage": 96000, "fuel_type": "diesel", "transmission": "automatic", "seats": null, "location": "Witney, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-27T16:10:36.861978", "last_seen_at": "2026-01-28T14:47:37.704641", "is_gone": true, "gone_at": "2026-01-30T15:00:29.067602", "search_ids": ["93ff72b2", "default-7-seater"], "notified_at": null}, {"id": "gumtree_1508388383", "source": "gumtree", "source_id": "1508388383", "source_url": "https://www.gumtree.com/p/fiat/2006-fiat-doblo-1.4-8v-active-high-roof-5dr-petrol/1508388383", "title": "2006 Fiat Doblo 1.4 8V Active High Roof 5dr", "price": 2695, "year": 2006, "mileage": 80467, "fuel_type": "petrol", "transmission": null, "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/e26952f302654c2fb9_83d1751f7ead/86"], "first_seen_at": "2026-01-27T16:10:36.861970", "last_seen_at": "2026-01-28T14:46:05.265337", "is_gone": true, "gone_at": "2026-01-30T15:00:29.067601", "search_ids": ["default-7-seater"], "notified_at": null, "local_image": "images/gumtree_1508388383_0.jpg"}, {"id": "gumtree_1509039268", "source": "gumtree", "source_id": "1509039268", "source_url": "https://www.gumtree.com/p/mercedes-benz/mercedes-benz-b-class-mpv-2012-semi-auto-1796-cc-5-doors/1509039268", "title": "2012 Mercedes-Benz B CLASS MPV", "price": 3900, "year": 2012, "mileage": 141153, "fuel_type": "diesel", "transmission": "semi-automatic", "seats": null, "location": "Oxford, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/e381b8d2df884e059c_e9c877c15642/86"], "first_seen_at": "2026-01-27T16:10:36.861963", "last_seen_at": "2026-01-28T14:46:05.264756", "is_gone": true, "gone_at": "2026-01-30T15:00:29.067601", "search_ids": ["default-7-seater"], "notified_at": null, "local_image": "images/gumtree_1509039268_0.jpg"}, {"id": "gumtree_1507572451", "source": "gumtree", "source_id": "1507572451", "source_url": "https://www.gumtree.com/p/ford/2008-ford-s-max-2.0-tdci-lx-5dr-mpv-diesel-manual/1507572451", "title": "2008 Ford S-Max 2.0 TDCi LX 5dr MPV Diesel Manual", "price": 2600, "year": 2008, "mileage": 115000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Eynsham, Oxfordshire", "distance_miles": null, "description": "", "images": ["https://img.gumtree.com/ePR8PyKf84wPHx7_RYmEag/937e2127ec2b487685_aa7f9a8fdbb5/86"], "first_seen_at": "2026-01-27T16:10:36.861951", "last_seen_at": "2026-02-01T15:58:47.903038", "is_gone": false, "gone_at": null, "search_ids": ["22859adb", "default-7-seater"], "notified_at": null, "local_image": "images/gumtree_1507572451_0.jpg"}, {"id": "gumtree_1506791138", "source": "gumtree", "source_id": "1506791138", "source_url": "https://www.gumtree.com/p/fiat/fiat-qubo-mpv-2015-manual-1248-cc-active-multijet-diesel-5-doors/1506791138", "title": "2015 Fiat QUBO MPV", "price": 1000, "year": 2015, "mileage": 119000, "fuel_type": "diesel", "transmission": "manual", "seats": null, "location": "Headington, Oxfordshire", "distance_miles": null, "description": "", "images": [], "first_seen_at": "2026-01-27T16:10:36.861906", "last_seen_at": "2026-01-28T14:46:05.261298", "is_gone": true, "gone_at": "2026-01-30T15:00:29.067599", "search_ids": ["default-7-seater"], "notified_at": null}];
+        const preferredBudget = 1500;
+        const maxBudget = 4000;
+        let currentFilter = 'all';
+        let currentSort = 'newest';
+
+        function init() {
+            renderListings();
+            updateStats();
+        }
+
+        function isRecent(dateStr) {
+            if (!dateStr) return false;
+            const date = new Date(dateStr);
+            const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            return date > dayAgo;
+        }
+
+        function getPriceClass(price) {
+            if (price <= preferredBudget) return 'preferred';
+            if (price <= maxBudget) return 'stretch';
+            return 'over';
+        }
+
+        function renderListings() {
+            const grid = document.getElementById('listingsGrid');
+            let filtered = listings;
+
+            // Apply filter
+            switch (currentFilter) {
+                case 'preferred':
+                    filtered = listings.filter(l => !l.is_gone && l.price <= preferredBudget);
+                    break;
+                case 'stretch':
+                    filtered = listings.filter(l => !l.is_gone && l.price > preferredBudget && l.price <= maxBudget);
+                    break;
+                case 'new':
+                    filtered = listings.filter(l => !l.is_gone && isRecent(l.first_seen_at));
+                    break;
+                case 'gone':
+                    filtered = listings.filter(l => l.is_gone);
+                    break;
+                default:
+                    filtered = listings.filter(l => !l.is_gone);
+            }
+
+            // Apply sort
+            filtered = sortListings(filtered, currentSort);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <div class="empty-state-title">No listings found</div>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(listing => {
+                const priceClass = getPriceClass(listing.price);
+                const isNew = isRecent(listing.first_seen_at);
+                const imageSrc = listing.local_image || (listing.images && listing.images[0]);
+
+                return `
+                    <a href="${listing.source_url}" target="_blank" class="listing-card ${isNew ? 'new' : ''} ${listing.is_gone ? 'gone' : ''}">
+                        <div class="listing-image-container">
+                            ${imageSrc
+                                ? `<img src="${imageSrc}" alt="${listing.title}" class="listing-image" onerror="this.parentElement.innerHTML='<div class=\'listing-image-placeholder\'>🚗</div>'">`
+                                : `<div class="listing-image-placeholder">🚗</div>`
+                            }
+                            <div class="listing-badges">
+                                ${isNew ? '<span class="listing-badge new">New</span>' : ''}
+                                ${listing.is_gone ? '<span class="listing-badge gone">Gone</span>' : ''}
+                            </div>
+                            <span class="listing-source-badge">${listing.source}</span>
+                        </div>
+                        <div class="listing-body">
+                            <div class="listing-header">
+                                <div class="listing-title">${listing.title}</div>
+                                <div class="listing-price ${priceClass}">£${listing.price.toLocaleString()}</div>
+                            </div>
+                            <div class="listing-specs">
+                                ${listing.year ? `<span class="listing-spec"><span class="listing-spec-icon">📅</span>${listing.year}</span>` : ''}
+                                ${listing.mileage ? `<span class="listing-spec"><span class="listing-spec-icon">🛣️</span>${listing.mileage.toLocaleString()}mi</span>` : ''}
+                                ${listing.fuel_type ? `<span class="listing-spec"><span class="listing-spec-icon">⛽</span>${listing.fuel_type}</span>` : ''}
+                                ${listing.location ? `<span class="listing-spec"><span class="listing-spec-icon">📍</span>${listing.location}</span>` : ''}
+                            </div>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        function sortListings(list, sortKey) {
+            const sorted = [...list];
+            switch (sortKey) {
+                case 'price-asc':
+                    return sorted.sort((a, b) => a.price - b.price);
+                case 'price-desc':
+                    return sorted.sort((a, b) => b.price - a.price);
+                case 'year-desc':
+                    return sorted.sort((a, b) => (b.year || 0) - (a.year || 0));
+                case 'mileage-asc':
+                    return sorted.sort((a, b) => (a.mileage || 999999) - (b.mileage || 999999));
+                case 'newest':
+                default:
+                    return sorted.sort((a, b) => new Date(b.first_seen_at || 0) - new Date(a.first_seen_at || 0));
+            }
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.filter === filter);
+            });
+            document.getElementById('listingsGrid').dataset.filter = filter;
+            renderListings();
+        }
+
+        function setSort(sortValue) {
+            currentSort = sortValue;
+            renderListings();
+        }
+
+        function updateStats() {
+            const active = listings.filter(l => !l.is_gone);
+            const preferred = active.filter(l => l.price <= preferredBudget);
+            const stretch = active.filter(l => l.price > preferredBudget && l.price <= maxBudget);
+            const newListings = active.filter(l => isRecent(l.first_seen_at));
+            const gone = listings.filter(l => l.is_gone);
+
+            document.getElementById('countAll').textContent = active.length;
+            document.getElementById('countPreferred').textContent = preferred.length;
+            document.getElementById('countStretch').textContent = stretch.length;
+            document.getElementById('countNew').textContent = newListings.length;
+            document.getElementById('countGone').textContent = gone.length;
+            document.getElementById('headerStatus').textContent = `${active.length} listing${active.length !== 1 ? 's' : ''}`;
+        }
+
+        init();
+    </script>
+</body>
+</html>
